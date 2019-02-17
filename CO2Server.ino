@@ -55,6 +55,41 @@ void displayConnection()
   oled.putString("http://esp8266.local/");
 }
 
+inline void putTime(char **buf, uint32_t m, char sfx)
+{
+  if (!buf || !*buf || m == 0 || m >= 100)
+    return;
+  const char u = m / 10, l = m % 10;
+  if (u)
+  {
+    **buf = u + '0';
+    ++*buf;
+  }
+  **buf = l + '0';
+  ++*buf;
+  **buf = sfx;
+  ++*buf;
+}
+
+String uptime()
+{
+  uint32_t seconds = millis() / 1000;
+  uint32_t minutes = seconds / 60;
+  seconds %= 60;
+  uint32_t hours = minutes / 60;
+  minutes %= 60;
+  uint32_t days = hours / 24;
+  hours %= 24;
+
+  char i, uptime[13] = {0}, *u = uptime;
+  putTime(&u, days, 'd');
+  putTime(&u, hours, 'h');
+  putTime(&u, minutes, 'm');
+  putTime(&u, seconds, 's');
+
+  return String(uptime);
+}
+
 void displayCO2()
 {
   if (lastError > 0)
@@ -81,13 +116,13 @@ void displayCO2()
   }
   else
   {
-    oled.setTextXY(2, 1);
+    oled.setTextXY(1, 1);
     oled.putString(String(concentration));
-    oled.putString(" PPM");
+    oled.putString(" PPM   ");
   }
 
-  oled.setTextXY(4, 0);
-  oled.putString(String(millis()));
+  oled.setTextXY(3, 1);
+  oled.putString(uptime());
 }
 
 void setup(void)
@@ -109,6 +144,8 @@ void setup(void)
   oled.clearDisplay();
   oled.setTextXY(0, 0);
   oled.putString("CO2 Level:");
+  oled.setTextXY(2, 0);
+  oled.putString("Uptime:");
 
   MHZ19B::setRange(MHZ19B::PpmRange::PPM_5000);
 }
