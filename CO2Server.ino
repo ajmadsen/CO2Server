@@ -17,6 +17,8 @@ ESP8266WiFiMulti multi;
 const int led = LED_BUILTIN;
 int lastError = 0;
 
+uint16_t minReading = 0xffff, maxReading = 0;
+
 void connect()
 {
   oled.clearDisplay();
@@ -90,6 +92,19 @@ String uptime()
   return String(uptime);
 }
 
+void setupDisplay()
+{
+  oled.clearDisplay();
+  oled.setTextXY(0, 0);
+  oled.putString("CO2 Level:");
+  oled.setTextXY(2, 0);
+  oled.putString("Min:");
+  oled.setTextXY(3, 0);
+  oled.putString("Max:");
+  oled.setTextXY(4, 0);
+  oled.putString("Uptime:");
+}
+
 void displayCO2()
 {
   if (lastError > 0)
@@ -114,14 +129,33 @@ void displayCO2()
     oled.putString("cksum fail");
     lastError = 10;
   }
+  else if (concentration > 5000)
+  {
+    // skip since the concentration is out of range
+  }
   else
   {
     oled.setTextXY(1, 1);
     oled.putString(String(concentration));
     oled.putString(" PPM   ");
+
+    if (minReading > concentration)
+    {
+      minReading = concentration;
+      oled.setTextXY(2, 5);
+      oled.putString(String(minReading));
+      oled.putString(" PPM  ");
+    }
+    if (concentration > maxReading)
+    {
+      maxReading = concentration;
+      oled.setTextXY(3, 5);
+      oled.putString(String(maxReading));
+      oled.putString(" PPM  ");
+    }
   }
 
-  oled.setTextXY(3, 1);
+  oled.setTextXY(5, 1);
   oled.putString(uptime());
 }
 
@@ -141,11 +175,7 @@ void setup(void)
   // connect();
   // displayConnection();
 
-  oled.clearDisplay();
-  oled.setTextXY(0, 0);
-  oled.putString("CO2 Level:");
-  oled.setTextXY(2, 0);
-  oled.putString("Uptime:");
+  setupDisplay();
 
   MHZ19B::setRange(MHZ19B::PpmRange::PPM_5000);
 }
@@ -153,6 +183,5 @@ void setup(void)
 void loop(void)
 {
   displayCO2();
-
   delay(2000);
 }
