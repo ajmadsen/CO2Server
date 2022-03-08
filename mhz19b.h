@@ -4,17 +4,32 @@
 namespace MHZ19B
 {
 
-enum PpmRange
-{
-    PPM_2000,
-    PPM_5000
-};
+    enum PpmRange
+    {
+        PPM_2000,
+        PPM_5000
+    };
 
-void setRange(const PpmRange range);
-int16_t readCO2();
+    class device_t
+    {
+    public:
+        device_t();
+        device_t(Stream *stream);
 
-const int16_t E_TimedOut = -1;
-const int16_t E_CksumFail = -2;
+        void reset(Stream *stream);
+
+        void setRange(const PpmRange range);
+        void setABC(bool enabled);
+        void setZero();
+
+        int16_t read(unsigned long timeout = 5000L);
+
+    private:
+        Stream *stream;
+    };
+
+    const int16_t E_TimedOut = -1;
+    const int16_t E_CksumFail = -2;
 
 } // namespace MHZ19B
 
